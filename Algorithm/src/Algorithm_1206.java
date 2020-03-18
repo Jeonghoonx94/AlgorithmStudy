@@ -16,8 +16,8 @@ public class Algorithm_1206 {
             }
             for(int i=2;i<width-2; ++i) {
                 highest = Math.max( Math.max( height[i-2], height[i-1] ) , Math.max( height[i+1], height[i+2] ) );
-                    if(height[i]>highest)
-                        sum_height += (height[i]-highest);
+                if(height[i]>highest)
+                    sum_height += (height[i]-highest);
             }
                 
             System.out.println("#"+test_case+" "+ sum_height);
