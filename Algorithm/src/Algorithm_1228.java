@@ -5,7 +5,7 @@ public class Algorithm_1228 {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 		
-		int T = 1;
+		int T = 10;
 		for(int test_case = 1; test_case<=T; ++test_case) {
 			int n = sc.nextInt();	// 원본 암호문의 길이 n (10 <= n <= 20)
 			LinkedList<Integer> list = new LinkedList<Integer>();
@@ -28,6 +28,7 @@ public class Algorithm_1228 {
 			for(int i=0; i<10; ++i) {
 				System.out.print(" "+list.get(i));
 			}
+			System.out.println();
 			list.clear();
 		}
 		sc.close();
