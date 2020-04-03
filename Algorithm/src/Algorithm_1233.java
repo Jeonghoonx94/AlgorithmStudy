@@ -15,12 +15,12 @@ public class Algorithm_1233 {
 			for(int i=0; i<n; ++i)
 				tree[sc.nextInt()] = sc.nextLine().charAt(1);	// 공백부터 읽어지므로 1
 			
-			System.out.println("#"+test_case+" "+inorder_traverse(n));
+			System.out.println("#"+test_case+" "+isValid(n));
 		}
 		sc.close();
 	}
 	
-	static int inorder_traverse(int i) {	// i: 트리의 마지막 노드 위치
+	static int isValid(int i) {	// i: 트리의 마지막 노드 위치
 		int result = 1;
 		for(int a = i; a > 0; --a) {
 			char c = tree[a];
