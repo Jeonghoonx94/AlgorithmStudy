@@ -1,4 +1,6 @@
-/bin/
-/.project
-/.classpath
-/out/
+bin/
+.project
+.classpath
+out/
+.idea/
+Algorithm.iml
