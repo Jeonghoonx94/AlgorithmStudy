@@ -3,11 +3,16 @@ package baekjoon;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.StringTokenizer;
 
 public class BOJ17143_낚시왕_G2 {
     static int R, C, M, Ans;
-    static Shark[] Sharks;
+    static int[] dr = {-1, 1, 0, 0}, dc = {0, 0, 1, -1}; // 상하우좌
+    static Queue<Shark> moveQ;
+    static Queue<Shark>[][] pq;
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -22,32 +27,35 @@ public class BOJ17143_낚시왕_G2 {
             return;
         }
 
-        Sharks = new Shark[M];
+        moveQ = new LinkedList<>();
+        pq = new PriorityQueue[R][C];
 
-        for (int m = 0; m < M; ++m) {
+        for (int i = 0; i < R; i++) {
+            for (int j = 0; j < C; j++) {
+                pq[i][j] = new PriorityQueue<>((o1, o2) -> Integer.compare(o1.size, o2.size));
+            }
+        }
+
+        for (int m = 1; m <= M; ++m) {
             st = new StringTokenizer(br.readLine(), " ");
-            int r = Integer.parseInt(st.nextToken());
-            int c = Integer.parseInt(st.nextToken());
+            int r = Integer.parseInt(st.nextToken()) - 1;
+            int c = Integer.parseInt(st.nextToken()) - 1;
             int s = Integer.parseInt(st.nextToken());
-            int d = Integer.parseInt(st.nextToken());
+            int d = Integer.parseInt(st.nextToken()) - 1;
             int z = Integer.parseInt(st.nextToken());
 
-            if (d == 1 || d == 2) {
-                s = s % (2 * (R - 1));
-            } else {
-                s = s % (2 * (C - 1));
-            }
+            s %= d < 2 ? 2 * (R - 1) : 2 * (C - 1);
 
-            Sharks[m] = new Shark(r, c, s, d, z);
+            pq[r][c].offer(new Shark(r, c, s, d, z));
         }
 
         Ans = 0;
         int fkIdx = 0;
 
         // 1.낚시왕이 오른쪽으로 한칸 이동
-        while (fkIdx++ < C) {
+        while (fkIdx < C) {
             // 2. 가까운 상어 잡기
-            catchShark(fkIdx);
+            catchShark(fkIdx++);
             // 3. 상어 이동
             moveSharks();
         }
@@ -56,91 +64,77 @@ public class BOJ17143_낚시왕_G2 {
     }
 
     private static void catchShark(int fkIdx) {
-        for (int i = 1; i <= R; ++i) {
-            for (int idx = 0; idx < M; ++idx) {
-                if (Sharks[idx].alive && Sharks[idx].c == fkIdx && Sharks[idx].r == i) {
-                    Ans += Sharks[idx].size;
-                    Sharks[idx].alive = false;
-                    return;
-                }
+        for (int i = 0; i < R; ++i) {
+            if (!pq[i][fkIdx].isEmpty()) {
+                Ans += pq[i][fkIdx].poll().size;
+                return;
             }
         }
     }
 
     private static void moveSharks() {
-        int[] dr = {0, -1, 1, 0, 0}, dc = {0, 0, 0, 1, -1}; // x상하우좌
-
-        for (int idx = 0; idx < M; ++idx) {
-            if (!Sharks[idx].alive) {
-                continue;
+        for (int i = 0; i < R; i++) {
+            for (int j = 0; j < C; j++) {
+                if (!pq[i][j].isEmpty() && pq[i][j].peek().speed > 0) {
+                    moveQ.offer(pq[i][j].poll());
+                }
             }
+        }
 
-            int r = Sharks[idx].r;
-            int c = Sharks[idx].c;
-            int d = Sharks[idx].direct;
-            int s = Sharks[idx].speed;
+        while (!moveQ.isEmpty()) {
+            Shark shark = moveQ.poll();
 
-            while (s-- > 0) {
-                r += dr[d];
-                c += dc[d];
+            int cr = shark.r;
+            int cc = shark.c;
+            int cd = shark.direct;
+            int cs = shark.speed;
 
-                // 1~4 : 상하우좌
-                if (d == 1 || d == 2) {
-                    if (r > R) { // 맨 아래에 위치
-                        d = 1; // 상으로 바꾸기
-                        r -= 2;
+            while (cs-- > 0) {
+                cr += dr[cd];
+                cc += dc[cd];
+
+                // 0~3 : 상하우좌
+                if (!isIn(cr, cc)) {
+                    if (cd == 0) {
+                        cd = 1;
+                    } else if (cd == 1) {
+                        cd = 0;
+                    } else if (cd == 2) {
+                        cd = 3;
+                    } else {
+                        cd = 2;
                     }
-                    if (r == 0) {
-                        d = 2;
-                        r += 2;
-                    }
-                } else {
-                    if (c > C) {
-                        d = 4;
-                        c -= 2;
-                    }
-                    if (c == 0) {
-                        d = 3;
-                        c += 2;
-                    }
+                    cr += dr[cd] * 2;
+                    cc += dc[cd] * 2;
                 }
             }
 
-            Sharks[idx].r = r;
-            Sharks[idx].c = c;
-            Sharks[idx].direct = d;
+            shark.r = cr;
+            shark.c = cc;
+            shark.direct = cd;
+
+            pq[cr][cc].offer(shark);
         }
 
-        // 같은 칸 잡아먹기
         eatShark();
     }
 
     private static void eatShark() {
-        for (int i = 0; i < M - 1; ++i) {
-            if (!Sharks[i].alive) {
-                continue;
-            }
-
-            for (int j = i + 1; j < M; ++j) {
-                if (!Sharks[j].alive) {
-                    continue;
-                }
-
-                if (Sharks[i].r == Sharks[j].r && Sharks[i].c == Sharks[j].c) {
-                    if (Sharks[i].size > Sharks[j].size) {
-                        Sharks[j].alive = false;
-                    } else {
-                        Sharks[i].alive = false;
-                    }
-                    break;
+        for (int i = 0; i < R; i++) {
+            for (int j = 0; j < C; j++) {
+                while (pq[i][j].size() > 1) {
+                    pq[i][j].poll();
                 }
             }
         }
     }
 
+    private static boolean isIn(int cr, int cc) {
+        return cr >= 0 && cr < R && cc >= 0 && cc < C;
+    }
+
     static class Shark {
         int r, c, speed, direct, size;
-        boolean alive;
 
         public Shark(int r, int c, int speed, int direct, int size) {
             this.r = r;
@@ -148,18 +142,6 @@ public class BOJ17143_낚시왕_G2 {
             this.speed = speed;
             this.direct = direct;
             this.size = size;
-            this.alive = true;
-        }
-
-        @Override
-        public String toString() {
-            return "Shark{" +
-                    "r=" + r +
-                    ", c=" + c +
-                    ", speed=" + speed +
-                    ", direct=" + direct +
-                    ", size=" + size +
-                    '}';
         }
     }
 }
